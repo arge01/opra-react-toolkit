@@ -1,0 +1,40 @@
+{
+    "name": "@opra/react-toolkit",
+    "version": "1.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        "./tanstack": {
+            "import": "./dist/tanstack.mjs",
+            "require": "./dist/tanstack.js",
+            "types": "./dist/tanstack.d.ts"
+        },
+        "./rtk": {
+            "import": "./dist/rtk.mjs",
+            "require": "./dist/rtk.js",
+            "types": "./dist/rtk.d.ts"
+        },
+        "./core": {
+            "import": "./dist/core.mjs",
+            "require": "./dist/core.js",
+            "types": "./dist/core.d.ts"
+        }
+    },
+    "scripts": {
+        "build": "tsup",
+        "dev": "tsup --watch",
+        "prepublishOnly": "yarn build"
+    },
+    "peerDependencies": {
+        "react": "^18.0.0",
+        "@tanstack/react-query": "^5.0.0",
+        "@reduxjs/toolkit": "^2.0.0",
+        "rxjs": "^7.0.0"
+    },
+    "devDependencies": {
+        "tsup": "^8.0.0",
+        "typescript": "^5.0.0"
+    }
+}
