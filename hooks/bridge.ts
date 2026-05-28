@@ -1,6 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+// src/core/useBridge.ts
 import { useCallback, useRef } from "react";
-import { useOpraConfig } from "../core/OpraProvider";
+import { useOpraConfig } from "./OpraProvider";
+
+// Opra'nın genel hata yapısını veya response yapısını modelleyen yardımcı tipler
+type OpraLikeResponse<T> = T & {
+    status?: number;
+    body?: {
+        status?: number;
+    };
+};
+
+type OpraLikeError = {
+    status?: number;
+};
 
 export function useBridge<TApi, TResult>(
     fn: (api: TApi) => Promise<TResult>,
@@ -13,11 +25,12 @@ export function useBridge<TApi, TResult>(
 
     const execute = useCallback(async (): Promise<TResult> => {
         try {
-            // 1. İsteği çalıştır. (Token ve Interceptor işi zaten apiInstance içinde ayarlı)
+            // 1. İsteği çalıştır.
             const result = await fnRef.current(apiInstance);
 
-            // Not: OpraResponse'da status kodu body içinde veya ana objede olabilir
-            const status = (result as any)?.status || (result as any)?.body?.status;
+            // 2. Güvenli Tip Dönüşümü (Type Assertion olmadan kontrol)
+            const opraResult = result as OpraLikeResponse<TResult>;
+            const status = opraResult?.status ?? opraResult?.body?.status;
 
             if (status === 401 || status === 403) {
                 if (onAuthError) onAuthError(result);
@@ -25,12 +38,18 @@ export function useBridge<TApi, TResult>(
             }
 
             return result;
-        } catch (error: any) {
-            if (error?.status === 401 || error?.status === 403) {
-                if (onAuthError) onAuthError(error);
+        } catch (e: unknown) {
+            // Catch bloğunda gelen hatayı 'unknown' olarak yakalayıp güvenli kontrol yapıyoruz
+            const error = e as OpraLikeError;
+
+            if (error && typeof error === 'object' && ('status' in error)) {
+                if (error.status === 401 || error.status === 403) {
+                    if (onAuthError) onAuthError(error);
+                }
             }
-            throw error;
+            throw e; // Orijinal hatayı fırlatmaya devam et
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [apiInstance, onAuthError, ...deps]);
 
     return { call: execute };
