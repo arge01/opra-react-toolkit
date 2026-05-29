@@ -1,6 +1,6 @@
 {
-    "name": "@opra-frontend/react-toolkit",
-    "version": "1.0.0",
+    "name": "@opra-frontend/react-service-toolkit",
+    "version": "0.0.1",
     "description": "React toolkit for consuming OPRA schemas with React Query and Redux Toolkit integration.",
     "type": "module",
     "files": [

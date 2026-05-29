@@ -8,7 +8,7 @@ Install the core toolkit along with your preferred state management library:
 
 ```bash
 # Core toolkit
-npm install @opra-frontend/react-toolkit
+npm install @opra-frontend/react-service-toolkit
 
 # For React Query users
 npm install @tanstack/react-query
@@ -24,7 +24,7 @@ In your project, generate your API schema using the OPRA CLI. This creates a ful
 ```json
 // package.json scripts
 "scripts": {
-  "import-api": "npx oprimp https://test.sbys.app/api/$schema src/api"
+  "import-api": "npx oprimp your-api-url/$schema src/api"
 }
 ```
 
@@ -39,7 +39,7 @@ The library is entirely UI-agnostic. You manage your own authentication error ha
 import { OpraHttpClient } from '@opra/client';
 import { OpraTest } from './OpraTest';
 
-export const baseInstance = new OpraHttpClient('http://localhost:3000', {
+export const baseInstance = new OpraHttpClient('your-api-url', {
   interceptors: [
     {
       intercept: (request, next) => {
@@ -68,7 +68,7 @@ export type ApiType = typeof api;
 
 ```tsx
 // src/App.tsx
-import { OpraToolkitProvider } from "@opra-frontend/react-toolkit/core";
+import { OpraToolkitProvider } from "@opra-frontend/react-service-toolkit/core";
 import { api } from "./api/instance"; // Your OPRA HttpClient setup
 import { toast } from "react-hot-toast";
 
