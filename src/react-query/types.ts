@@ -1,6 +1,6 @@
 import { OpraRunner } from "../core/types";
 
-export type ApiQueryProps<TApi, T, E> = {
+export type ApiQueryProps<TApi, _T, _E> = {
   queryKey: unknown[];
 
   connection?: (
@@ -36,7 +36,7 @@ export type ApiQueryProps<TApi, T, E> = {
   refetchOnMount?: boolean;
 };
 
-export type ApiMutationProps<TApi, T, V, E> = {
+export type ApiMutationProps<TApi, _T, V, _E> = {
   /**
    * Run function for the mutation. Data will be fetched when triggered.
    */

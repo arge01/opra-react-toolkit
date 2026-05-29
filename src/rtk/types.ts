@@ -3,7 +3,7 @@ import { OpraRunner } from "../core/types";
 /**
  * RTK (Redux Toolkit) Standart GET Request Type
  */
-export type RtkApiQueryProps<TApi, T, E> = {
+export type RtkApiQueryProps<TApi, _T, _E> = {
   /**
    * Defines the cache key under which this request will be stored in the Redux Store (Slice).
    * E.g.: ["patient", id, "detail"] -> "patient_123_detail"
@@ -36,7 +36,7 @@ export type RtkApiQueryProps<TApi, T, E> = {
 /**
  * RTK (Redux Toolkit) Mutation (POST, PUT, DELETE) Request Type
  */
-export type RtkApiMutationProps<TApi, T, V, E> = {
+export type RtkApiMutationProps<TApi, _T, V, _E> = {
   /**
    * Mutations generally don't create permanent cache in Redux state,
    * but actionName is required to track loading/error states.

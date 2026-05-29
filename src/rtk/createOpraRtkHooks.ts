@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useBridge, useOpraConfig } from "../core";
-import type { Model, OpraRunner, QueryResult, ExtractModel, StrictApi } from "../core/types";
+import type { Model, OpraRunner, ExtractModel, StrictApi, OpraResponse } from "../core/types";
 import type { RtkApiQueryProps, RtkApiMutationProps, RtkApiPaginatedQueryProps } from "./types";
 
 export function createOpraRtkHooks<TApi>() {
@@ -47,18 +47,18 @@ export function createOpraRtkHooks<TApi>() {
 
       try {
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
         }
 
         const result = (res.body?.payload ?? res.body) as T;
-        const matches = Number(res.body?.totalMatches ?? 0);
-        
+        const matches = Number((res.body as { totalMatches?: number })?.totalMatches ?? 0);
+
         setTotalMatches(matches);
         dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { queryKey: props.queryKey, totalMatches: matches } });
-        
+
         setState({
           result,
           isLoading: false,
@@ -85,7 +85,6 @@ export function createOpraRtkHooks<TApi>() {
       // Basic fetch on mount logic. In a real RTK Query setup, this is more complex, 
       // but here we follow the simplified RTK API wrapper approach.
       execute();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, stringDeps);
 
     return [state, execute, totalMatches];
@@ -128,7 +127,7 @@ export function createOpraRtkHooks<TApi>() {
 
         try {
           const response = await call();
-          const res = response as any;
+          const res = response as OpraResponse<E>;
 
           if (!res?.ok) {
             throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
@@ -136,7 +135,7 @@ export function createOpraRtkHooks<TApi>() {
 
           const result = (res.body?.payload ?? res.body) as T;
           dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { variables } });
-          
+
           setState({
             result,
             isLoading: false,
@@ -230,13 +229,13 @@ export function createOpraRtkHooks<TApi>() {
 
         const result = (res.body?.payload ?? res.body) as T;
         const matches = Number(res.body?.totalMatches ?? 0);
-        
+
         if (!isNaN(matches)) {
-            setTotalMatches(matches);
+          setTotalMatches(matches);
         }
 
         dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { queryKey: fullQueryKey, totalMatches: matches } });
-        
+
         setState({
           result,
           isLoading: false,
@@ -261,7 +260,7 @@ export function createOpraRtkHooks<TApi>() {
 
     useEffect(() => {
       execute();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...stringDeps, props.pagination.skip, props.pagination.limit]);
 
     return [state, execute, totalMatches];

@@ -48,7 +48,6 @@ export function useBridge<TApi, TResult>(
       }
       throw e;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [apiInstance, onAuthError, onError, ...deps]);
 
   return { call: execute };

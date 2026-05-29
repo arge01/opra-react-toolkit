@@ -19,6 +19,7 @@ import type {
   QueryResult,
   ExtractModel,
   StrictApi,
+  OpraResponse,
 } from "../core/types";
 import type {
   ApiQueryProps,
@@ -64,7 +65,7 @@ export function createOpraHooks<TApi>() {
       queryKey: props.queryKey,
       queryFn: async () => {
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw (
@@ -74,7 +75,7 @@ export function createOpraHooks<TApi>() {
 
         return {
           result: (res.body?.payload ?? res.body) as T,
-          totalMatches: Number(res.body?.totalMatches ?? 0),
+          totalMatches: Number((res.body as { totalMatches?: number })?.totalMatches ?? 0),
         };
       },
       enabled: props.enabled ?? true,
@@ -129,10 +130,10 @@ export function createOpraHooks<TApi>() {
       async (api: TApi): Promise<unknown> => {
         const pagingParams = props.pagination.skip
           ? {
-              skip: props.pagination.skip,
-              limit: props.pagination.limit,
-              count: needsCount,
-            }
+            skip: props.pagination.skip,
+            limit: props.pagination.limit,
+            count: needsCount,
+          }
           : { limit: props.pagination.limit, count: needsCount };
 
         const runner = props.run(
@@ -164,9 +165,9 @@ export function createOpraHooks<TApi>() {
 
     const { call } = props.connection
       ? props.connection(
-          async (api) => await latestCallRef.current(api),
-          stringDeps
-        )
+        async (api) => await latestCallRef.current(api),
+        stringDeps
+      )
       : localBridge;
 
     const query = useQuery<QueryResult<T>, E>({
@@ -177,7 +178,7 @@ export function createOpraHooks<TApi>() {
       ],
       queryFn: async () => {
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw (
@@ -185,7 +186,7 @@ export function createOpraHooks<TApi>() {
           );
         }
 
-        const apiTotalMatches = Number(res.body?.totalMatches);
+        const apiTotalMatches = Number((res.body as { totalMatches?: number })?.totalMatches);
         if (needsCount && !isNaN(apiTotalMatches)) {
           queryClient.setQueryData(countCacheKey, apiTotalMatches);
         }
@@ -262,7 +263,7 @@ export function createOpraHooks<TApi>() {
       mutationFn: async (variables: V) => {
         varsRef.current = variables;
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw (
@@ -347,9 +348,9 @@ export function createOpraHooks<TApi>() {
 
     const { call } = props.connection
       ? props.connection(
-          async (api: TApi) => await latestCallRef.current(api),
-          stringDeps
-        )
+        async (api: TApi) => await latestCallRef.current(api),
+        stringDeps
+      )
       : localBridge;
 
     const query = useInfiniteQuery<QueryResult<T[]>, E>({
@@ -358,7 +359,7 @@ export function createOpraHooks<TApi>() {
       queryFn: async ({ pageParam = 0 }) => {
         currentSkipRef.current = pageParam as number;
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw (
@@ -368,10 +369,10 @@ export function createOpraHooks<TApi>() {
 
         return {
           result: (res.body?.payload ?? res.body ?? []) as T[],
-          totalMatches: Number(res.body?.totalMatches ?? 0),
+          totalMatches: Number((res.body as { totalMatches?: number })?.totalMatches ?? 0),
         };
       },
-      getNextPageParam: (lastPage: any, allPages: any[]) => {
+      getNextPageParam: (lastPage, allPages) => {
         if (!lastPage.result || lastPage.result.length < limit) {
           return null;
         }
