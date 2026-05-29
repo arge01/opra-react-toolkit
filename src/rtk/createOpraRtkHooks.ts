@@ -221,14 +221,14 @@ export function createOpraRtkHooks<TApi>() {
 
       try {
         const response = await call();
-        const res = response as any;
+        const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
           throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
         }
 
         const result = (res.body?.payload ?? res.body) as T;
-        const matches = Number(res.body?.totalMatches ?? 0);
+        const matches = Number((res.body as { totalMatches?: number })?.totalMatches ?? 0);
 
         if (!isNaN(matches)) {
           setTotalMatches(matches);
@@ -260,7 +260,6 @@ export function createOpraRtkHooks<TApi>() {
 
     useEffect(() => {
       execute();
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...stringDeps, props.pagination.skip, props.pagination.limit]);
 
     return [state, execute, totalMatches];
