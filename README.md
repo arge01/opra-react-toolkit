@@ -35,16 +35,48 @@ This will create an `api` type based on your OPRA backend.
 The library is entirely UI-agnostic. You manage your own authentication error handling, toasts, and UI layouts by passing global callbacks to the `OpraToolkitProvider`.
 
 ```tsx
+// src/api/instance.ts
+import { OpraHttpClient } from '@opra/client';
+import { OpraTest } from './OpraTest';
+
+export const baseInstance = new OpraHttpClient('http://localhost:3000', {
+  interceptors: [
+    {
+      intercept: (request, next) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+          request.headers = request.headers || new Headers();
+          if (request.headers instanceof Headers) {
+            request.headers.set('Authorization', `Bearer ${token}`);
+          } else if (Array.isArray(request.headers)) {
+            (request.headers as string[][]).push(['Authorization', `Bearer ${token}`]);
+          } else {
+            (request.headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+          }
+        }
+        return next.handle(request);
+      }
+    }
+  ]
+});
+
+export const api = new OpraTest(baseInstance);
+
+// Export type for creating hooks
+export type ApiType = typeof api;
+```
+
+```tsx
 // src/App.tsx
-import { OpraToolkitProvider } from "@opra/react-toolkit/core";
-import { myApiInstance } from "./api/instance"; // Your OPRA HttpClient setup
-import { toast } from "react-toastify";
+import { OpraToolkitProvider } from "@opra-frontend/react-toolkit/core";
+import { api } from "./api/instance"; // Your OPRA HttpClient setup
+import { toast } from "react-hot-toast";
 
 function App() {
   return (
     <OpraToolkitProvider 
       config={{
-        apiInstance: myApiInstance,
+        apiInstance: api,
         onAuthError: () => {
           // e.g. Redirect to login on 401/403
           window.location.href = "/login";
