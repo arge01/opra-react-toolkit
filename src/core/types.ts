@@ -70,12 +70,12 @@ type Prev = [never, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 type LeafPaths<T, Depth extends number = 3> = [Depth] extends [never]
   ? never
   : {
-    [K in keyof Safe<T> & string]: IsObject<Safe<T>[K]> extends false
-    ? K
-    :
-    | `${K}.${LeafPaths<Safe<T>[K], Prev[Depth]>}`
-    | `+${K}.${LeafPaths<Safe<T>[K], Prev[Depth]>}`;
-  }[keyof Safe<T> & string];
+      [K in keyof Safe<T> & string]: IsObject<Safe<T>[K]> extends false
+        ? K
+        :
+            | `${K}.${LeafPaths<Safe<T>[K], Prev[Depth]>}`
+            | `+${K}.${LeafPaths<Safe<T>[K], Prev[Depth]>}`;
+    }[keyof Safe<T> & string];
 
 export type NonEmptyStrictProjection<T> = [
   LeafPaths<T, 5>,
@@ -94,14 +94,14 @@ export type InjectStrictProjectionArgs2<TMethod, TModel> = TMethod extends (
   ...args: infer Rest
 ) => infer R
   ? P extends { projection?: string[] | unknown }
-  ? (
-    arg1: A,
-    params: Omit<P, "projection"> & {
-      projection: NonEmptyStrictProjection<TModel>;
-    },
-    ...args: Rest
-  ) => R
-  : TMethod
+    ? (
+        arg1: A,
+        params: Omit<P, "projection"> & {
+          projection: NonEmptyStrictProjection<TModel>;
+        },
+        ...args: Rest
+      ) => R
+    : TMethod
   : TMethod;
 
 export type InjectStrictProjection<TMethod, TModel> = TMethod extends (
@@ -109,27 +109,27 @@ export type InjectStrictProjection<TMethod, TModel> = TMethod extends (
   ...rest1: infer Rest1
 ) => infer R
   ? "projection" extends keyof NonNullable<P1>
-  ? (
-    p1: Omit<NonNullable<P1>, "projection"> & {
-      projection: NonEmptyStrictProjection<TModel>;
-    },
-    ...args: Rest1
-  ) => R
-  : TMethod extends (
-    p1: infer _P1,
-    p2: infer P2,
-    ...rest2: infer Rest2
-  ) => infer _R
-  ? "projection" extends keyof NonNullable<P2>
-  ? (
-    p1: P1,
-    p2: Omit<NonNullable<P2>, "projection"> & {
-      projection: NonEmptyStrictProjection<TModel>;
-    },
-    ...args: Rest2
-  ) => R
-  : TMethod
-  : TMethod
+    ? (
+        p1: Omit<NonNullable<P1>, "projection"> & {
+          projection: NonEmptyStrictProjection<TModel>;
+        },
+        ...args: Rest1
+      ) => R
+    : TMethod extends (
+          p1: infer _P1,
+          p2: infer P2,
+          ...rest2: infer Rest2
+        ) => infer _R
+      ? "projection" extends keyof NonNullable<P2>
+        ? (
+            p1: P1,
+            p2: Omit<NonNullable<P2>, "projection"> & {
+              projection: NonEmptyStrictProjection<TModel>;
+            },
+            ...args: Rest2
+          ) => R
+        : TMethod
+      : TMethod
   : TMethod;
 
 export type StrictController<TController, TModel> = {

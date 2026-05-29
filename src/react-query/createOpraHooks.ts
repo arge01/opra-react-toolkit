@@ -75,7 +75,9 @@ export function createOpraHooks<TApi>() {
 
         return {
           result: (res.body?.payload ?? res.body) as T,
-          totalMatches: Number((res.body as { totalMatches?: number })?.totalMatches ?? 0),
+          totalMatches: Number(
+            (res.body as { totalMatches?: number })?.totalMatches ?? 0
+          ),
         };
       },
       enabled: props.enabled ?? true,
@@ -130,10 +132,10 @@ export function createOpraHooks<TApi>() {
       async (api: TApi): Promise<unknown> => {
         const pagingParams = props.pagination.skip
           ? {
-            skip: props.pagination.skip,
-            limit: props.pagination.limit,
-            count: needsCount,
-          }
+              skip: props.pagination.skip,
+              limit: props.pagination.limit,
+              count: needsCount,
+            }
           : { limit: props.pagination.limit, count: needsCount };
 
         const runner = props.run(
@@ -165,9 +167,9 @@ export function createOpraHooks<TApi>() {
 
     const { call } = props.connection
       ? props.connection(
-        async (api) => await latestCallRef.current(api),
-        stringDeps
-      )
+          async (api) => await latestCallRef.current(api),
+          stringDeps
+        )
       : localBridge;
 
     const query = useQuery<QueryResult<T>, E>({
@@ -186,7 +188,9 @@ export function createOpraHooks<TApi>() {
           );
         }
 
-        const apiTotalMatches = Number((res.body as { totalMatches?: number })?.totalMatches);
+        const apiTotalMatches = Number(
+          (res.body as { totalMatches?: number })?.totalMatches
+        );
         if (needsCount && !isNaN(apiTotalMatches)) {
           queryClient.setQueryData(countCacheKey, apiTotalMatches);
         }
@@ -348,9 +352,9 @@ export function createOpraHooks<TApi>() {
 
     const { call } = props.connection
       ? props.connection(
-        async (api: TApi) => await latestCallRef.current(api),
-        stringDeps
-      )
+          async (api: TApi) => await latestCallRef.current(api),
+          stringDeps
+        )
       : localBridge;
 
     const query = useInfiniteQuery<QueryResult<T[]>, E>({
@@ -369,7 +373,9 @@ export function createOpraHooks<TApi>() {
 
         return {
           result: (res.body?.payload ?? res.body ?? []) as T[],
-          totalMatches: Number((res.body as { totalMatches?: number })?.totalMatches ?? 0),
+          totalMatches: Number(
+            (res.body as { totalMatches?: number })?.totalMatches ?? 0
+          ),
         };
       },
       getNextPageParam: (lastPage, allPages) => {
@@ -390,7 +396,9 @@ export function createOpraHooks<TApi>() {
     }, [query.isError, query.error, onError]);
 
     const flatData = useMemo(
-      () => query.data?.pages.flatMap((page: QueryResult<T[]>) => page.result) || [],
+      () =>
+        query.data?.pages.flatMap((page: QueryResult<T[]>) => page.result) ||
+        [],
       [query.data]
     );
 

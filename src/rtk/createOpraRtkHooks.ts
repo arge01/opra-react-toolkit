@@ -1,8 +1,25 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch } from "react-redux";
 import { useBridge, useOpraConfig } from "../core";
-import type { Model, OpraRunner, ExtractModel, StrictApi, OpraResponse } from "../core/types";
-import type { RtkApiQueryProps, RtkApiMutationProps, RtkApiPaginatedQueryProps } from "./types";
+import type {
+  Model,
+  OpraRunner,
+  ExtractModel,
+  StrictApi,
+  OpraResponse,
+} from "../core/types";
+import type {
+  RtkApiQueryProps,
+  RtkApiMutationProps,
+  RtkApiPaginatedQueryProps,
+} from "./types";
 
 export function createOpraRtkHooks<TApi>() {
   function useRtkApiQuery<T, E = object | string>(
@@ -38,26 +55,48 @@ export function createOpraRtkHooks<TApi>() {
       [props.queryKey]
     );
 
-    const localBridge = useBridge<TApi, unknown>(async (api) => await resolveCall(api), stringDeps);
-    const { call } = props.connection ? props.connection(async (api) => await resolveCall(api), stringDeps) : localBridge;
+    const localBridge = useBridge<TApi, unknown>(
+      async (api) => await resolveCall(api),
+      stringDeps
+    );
+    const { call } = props.connection
+      ? props.connection(async (api) => await resolveCall(api), stringDeps)
+      : localBridge;
 
     const execute = useCallback(async () => {
-      setState((prev) => ({ ...prev, isLoading: true, isFetching: true, pending: true, isError: false }));
-      dispatch({ type: `${props.actionName}/pending`, meta: { queryKey: props.queryKey } });
+      setState((prev) => ({
+        ...prev,
+        isLoading: true,
+        isFetching: true,
+        pending: true,
+        isError: false,
+      }));
+      dispatch({
+        type: `${props.actionName}/pending`,
+        meta: { queryKey: props.queryKey },
+      });
 
       try {
         const response = await call();
         const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
-          throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
+          throw (
+            res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error"
+          );
         }
 
         const result = (res.body?.payload ?? res.body) as T;
-        const matches = Number((res.body as { totalMatches?: number })?.totalMatches ?? 0);
+        const matches = Number(
+          (res.body as { totalMatches?: number })?.totalMatches ?? 0
+        );
 
         setTotalMatches(matches);
-        dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { queryKey: props.queryKey, totalMatches: matches } });
+        dispatch({
+          type: `${props.actionName}/fulfilled`,
+          payload: result,
+          meta: { queryKey: props.queryKey, totalMatches: matches },
+        });
 
         setState({
           result,
@@ -68,7 +107,12 @@ export function createOpraRtkHooks<TApi>() {
           pending: false,
         });
       } catch (error) {
-        dispatch({ type: `${props.actionName}/rejected`, payload: error, error: true, meta: { queryKey: props.queryKey } });
+        dispatch({
+          type: `${props.actionName}/rejected`,
+          payload: error,
+          error: true,
+          meta: { queryKey: props.queryKey },
+        });
         setState({
           error: error as E,
           isLoading: false,
@@ -82,7 +126,7 @@ export function createOpraRtkHooks<TApi>() {
     }, [call, dispatch, props.actionName, props.queryKey, onError]);
 
     useEffect(() => {
-      // Basic fetch on mount logic. In a real RTK Query setup, this is more complex, 
+      // Basic fetch on mount logic. In a real RTK Query setup, this is more complex,
       // but here we follow the simplified RTK API wrapper approach.
       execute();
     }, stringDeps);
@@ -116,13 +160,24 @@ export function createOpraRtkHooks<TApi>() {
       [props.run]
     );
 
-    const localBridge = useBridge<TApi, unknown>(async (api) => await resolveCall(api), []);
-    const { call } = props.connection ? props.connection(async (api) => await resolveCall(api), []) : localBridge;
+    const localBridge = useBridge<TApi, unknown>(
+      async (api) => await resolveCall(api),
+      []
+    );
+    const { call } = props.connection
+      ? props.connection(async (api) => await resolveCall(api), [])
+      : localBridge;
 
     const execute = useCallback(
       async (variables: V): Promise<T> => {
         varsRef.current = variables;
-        setState((prev) => ({ ...prev, isLoading: true, isFetching: true, pending: true, isError: false }));
+        setState((prev) => ({
+          ...prev,
+          isLoading: true,
+          isFetching: true,
+          pending: true,
+          isError: false,
+        }));
         dispatch({ type: `${props.actionName}/pending`, meta: { variables } });
 
         try {
@@ -130,11 +185,20 @@ export function createOpraRtkHooks<TApi>() {
           const res = response as OpraResponse<E>;
 
           if (!res?.ok) {
-            throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
+            throw (
+              res?.body?.errors ??
+              res?.body ??
+              res?.statusText ??
+              "Unknown Error"
+            );
           }
 
           const result = (res.body?.payload ?? res.body) as T;
-          dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { variables } });
+          dispatch({
+            type: `${props.actionName}/fulfilled`,
+            payload: result,
+            meta: { variables },
+          });
 
           setState({
             result,
@@ -147,7 +211,12 @@ export function createOpraRtkHooks<TApi>() {
 
           return result;
         } catch (error) {
-          dispatch({ type: `${props.actionName}/rejected`, payload: error, error: true, meta: { variables } });
+          dispatch({
+            type: `${props.actionName}/rejected`,
+            payload: error,
+            error: true,
+            meta: { variables },
+          });
           setState({
             error: error as E,
             isLoading: false,
@@ -189,10 +258,17 @@ export function createOpraRtkHooks<TApi>() {
     const resolveCall = useCallback(
       async (api: TApi): Promise<unknown> => {
         const pagingParams = props.pagination.skip
-          ? { skip: props.pagination.skip, limit: props.pagination.limit, count: true }
+          ? {
+              skip: props.pagination.skip,
+              limit: props.pagination.limit,
+              count: true,
+            }
           : { limit: props.pagination.limit, count: true };
 
-        const runner = props.run(api as StrictApi<TApi, ExtractModel<T>>, pagingParams);
+        const runner = props.run(
+          api as StrictApi<TApi, ExtractModel<T>>,
+          pagingParams
+        );
         if (runner && typeof runner === "object" && "getResponse" in runner) {
           return await (runner as OpraRunner).getResponse();
         }
@@ -211,30 +287,59 @@ export function createOpraRtkHooks<TApi>() {
       [props.queryKey]
     );
 
-    const localBridge = useBridge<TApi, unknown>(async (api) => await latestCallRef.current(api), stringDeps);
-    const { call } = props.connection ? props.connection(async (api) => await latestCallRef.current(api), stringDeps) : localBridge;
+    const localBridge = useBridge<TApi, unknown>(
+      async (api) => await latestCallRef.current(api),
+      stringDeps
+    );
+    const { call } = props.connection
+      ? props.connection(
+          async (api) => await latestCallRef.current(api),
+          stringDeps
+        )
+      : localBridge;
 
     const execute = useCallback(async () => {
-      setState((prev) => ({ ...prev, isLoading: true, isFetching: true, pending: true, isError: false }));
-      const fullQueryKey = [...props.queryKey, props.pagination.skip, props.pagination.limit];
-      dispatch({ type: `${props.actionName}/pending`, meta: { queryKey: fullQueryKey, pagination: props.pagination } });
+      setState((prev) => ({
+        ...prev,
+        isLoading: true,
+        isFetching: true,
+        pending: true,
+        isError: false,
+      }));
+      const fullQueryKey = [
+        ...props.queryKey,
+        props.pagination.skip,
+        props.pagination.limit,
+      ];
+      dispatch({
+        type: `${props.actionName}/pending`,
+        meta: { queryKey: fullQueryKey, pagination: props.pagination },
+      });
 
       try {
         const response = await call();
         const res = response as OpraResponse<E>;
 
         if (!res?.ok) {
-          throw res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error";
+          throw (
+            res?.body?.errors ?? res?.body ?? res?.statusText ?? "Unknown Error"
+          );
         }
 
         const result = (res.body?.payload ?? res.body) as T;
-        const matches = Number((res.body as { totalMatches?: number })?.totalMatches ?? 0);
+        const matches = Number(
+          (res.body as { totalMatches?: number })?.totalMatches ?? 0
+        );
 
         if (!isNaN(matches)) {
           setTotalMatches(matches);
         }
 
-        dispatch({ type: `${props.actionName}/fulfilled`, payload: result, meta: { queryKey: fullQueryKey, totalMatches: matches } });
+        dispatch({
+          type: `${props.actionName}/fulfilled`,
+          payload: result,
+          meta: { queryKey: fullQueryKey, totalMatches: matches },
+        });
 
         setState({
           result,
@@ -245,7 +350,18 @@ export function createOpraRtkHooks<TApi>() {
           pending: false,
         });
       } catch (error) {
-        dispatch({ type: `${props.actionName}/rejected`, payload: error, error: true, meta: { queryKey: [...props.queryKey, props.pagination.skip, props.pagination.limit] } });
+        dispatch({
+          type: `${props.actionName}/rejected`,
+          payload: error,
+          error: true,
+          meta: {
+            queryKey: [
+              ...props.queryKey,
+              props.pagination.skip,
+              props.pagination.limit,
+            ],
+          },
+        });
         setState({
           error: error as E,
           isLoading: false,
@@ -256,7 +372,14 @@ export function createOpraRtkHooks<TApi>() {
         });
         if (onError) onError(error);
       }
-    }, [call, dispatch, props.actionName, props.queryKey, props.pagination, onError]);
+    }, [
+      call,
+      dispatch,
+      props.actionName,
+      props.queryKey,
+      props.pagination,
+      onError,
+    ]);
 
     useEffect(() => {
       execute();
