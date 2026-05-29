@@ -8,7 +8,7 @@ Install the core toolkit along with your preferred state management library:
 
 ```bash
 # Core toolkit
-npm install @opra/react-toolkit
+npm install @opra-frontend/react-toolkit
 
 # For React Query users
 npm install @tanstack/react-query
