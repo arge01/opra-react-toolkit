@@ -1,2 +1,3 @@
 export * from "./types";
-export * from "./createOpraRtkHooks";
+export * from "./opraBaseQuery";
+export * from "./createOpraService";

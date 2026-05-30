@@ -153,3 +153,14 @@ export type ServiceOpraPayload<T> = {
   statusText?: string;
   body?: ServiceOpraBody<T> | T | unknown;
 };
+
+export interface RtkDraftItem {
+  id?: string | number;
+  [key: string]: unknown;
+}
+
+export interface RtkDraftPayload {
+  payload?: RtkDraftItem[];
+}
+
+export type RtkDraftList = RtkDraftItem[] | RtkDraftPayload;

@@ -1,30 +1,35 @@
 {
     "name": "@opra-frontend/react-service-toolkit",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "React toolkit for consuming OPRA schemas with React Query and Redux Toolkit integration.",
     "type": "module",
     "files": [
         "dist",
         "README.md"
     ],
-    "main": "./dist/core/index.js",
-    "module": "./dist/core/index.mjs",
+    "main": "./dist/core/index.cjs",
+    "module": "./dist/core/index.js",
     "types": "./dist/core/index.d.ts",
     "exports": {
         "./core": {
-            "import": "./dist/core/index.mjs",
-            "require": "./dist/core/index.js",
-            "types": "./dist/core/index.d.ts"
+            "types": "./dist/core/index.d.ts",
+            "import": "./dist/core/index.js",
+            "require": "./dist/core/index.cjs"
         },
         "./react-query": {
-            "import": "./dist/react-query/index.mjs",
-            "require": "./dist/react-query/index.js",
-            "types": "./dist/react-query/index.d.ts"
+            "types": "./dist/react-query/index.d.ts",
+            "import": "./dist/react-query/index.js",
+            "require": "./dist/react-query/index.cjs"
         },
         "./rtk": {
-            "import": "./dist/rtk/index.mjs",
-            "require": "./dist/rtk/index.js",
-            "types": "./dist/rtk/index.d.ts"
+            "types": "./dist/rtk/index.d.ts",
+            "import": "./dist/rtk/index.js",
+            "require": "./dist/rtk/index.cjs"
+        },
+        "./fetch": {
+            "types": "./dist/fetch/index.d.ts",
+            "import": "./dist/fetch/index.js",
+            "require": "./dist/fetch/index.cjs"
         }
     },
     "scripts": {

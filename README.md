@@ -1,4 +1,4 @@
-# @opra/react-toolkit
+# @opra-frontend/react-service-toolkit
 
 A highly scalable, generic, and UI-agnostic React toolkit for consuming OPRA generated schemas. It natively supports both **TanStack React Query** and **Redux Toolkit (RTK)** through a unified, fully-typed hook factory pattern.
 
@@ -97,7 +97,62 @@ function App() {
 
 Instead of passing the API type parameter every time you fetch data, you generate custom hooks bound to your specific schema. 
 
-### A) Using React Query
+### A) Basic Fetch Hooks (No Dependency)
+
+If you don't want to use any state-management library, the toolkit exports basic, fully typed React hooks using pure `useState` and `useEffect`. 
+
+```typescript
+// src/hooks/useOpraFetch.ts
+import { createOpraFetchHooks } from "@opra-frontend/react-service-toolkit/fetch";
+import type { api } from "../api";
+
+export const {
+  useApiQuery,
+  useTriggerApiQuery,
+  useApiMutation
+} = createOpraFetchHooks<typeof api>();
+```
+
+**Usage:**
+
+```tsx
+import { useApiQuery, useTriggerApiQuery, useApiMutation } from "../hooks/useOpraFetch";
+
+export function BasicComponent() {
+  // Auto-fetches on component mount
+  const [state, refetch, totalMatches] = useApiQuery({
+    run: (api) => api.$users.getProfile({ projection: ["id", "name"] })
+  });
+
+  // Lazy execution, trigger manually
+  const [lazyState, triggerFetch] = useTriggerApiQuery({
+    run: (api) => api.$users.getProfile({ projection: ["id", "name"] })
+  });
+
+  const [mutationState, executePost] = useApiMutation();
+
+  const handleSubmit = () => {
+    executePost(
+      { name: "John" }, 
+      (api, vars) => api.$users.create(vars)
+    ).then((res) => console.log("Created", res));
+  };
+
+  if (state.isLoading) return <div>Loading...</div>;
+  
+  return (
+    <div>
+      <p>{state.result?.name}</p>
+      <button onClick={() => triggerFetch()}>Load Lazy Data</button>
+      <button onClick={handleSubmit} disabled={mutationState.isLoading}>
+        Update
+      </button>
+    </div>
+  );
+}
+```
+
+### B) Using React Query
 
 Create a file to export your specific hooks:
 
@@ -131,40 +186,98 @@ export function UserProfile() {
 }
 ```
 
-### B) Using Redux Toolkit (RTK)
+### C) Using Redux Toolkit (RTK) Query
 
-Similarly, if your team prefers Redux, you can generate RTK hooks. These hooks dispatch Redux actions (e.g. `pending`, `fulfilled`, `rejected`) so they show up in Redux DevTools, while returning familiar local states identical to React Query.
+If your team uses Redux Toolkit, we provide a wrapper around RTK Query's `createApi` that allows optimistic/pessimistic cache modification *without refetching*. It automatically modifies the cache using `api.util.updateQueryData`.
 
 ```typescript
-// src/hooks/useOpraRtk.ts
-import { createOpraRtkHooks } from "@opra/react-toolkit/rtk";
-import type { api } from "../api";
+// src/services/patientService.ts
+import { createOpraService } from "@opra-frontend/react-service-toolkit/rtk";
+import { api } from "../api/instance"; 
+
+export const patientService = createOpraService(api, {
+  reducerPath: 'patientApi',
+  tagTypes: ['Patient'],
+  
+  getAll: (apiInstance, params: { skip: number; limit: number }) => 
+    apiInstance.$patients.findMany(params),
+
+  post: (apiInstance, body: unknown) => 
+    apiInstance.$patients.create(body),
+
+  delete: (apiInstance, { id }: { id: string }) => 
+    apiInstance.$patients.delete({ id }),
+});
 
 export const {
-  useRtkApiQuery,
-  useRtkApiMutation,
-  useRtkApiPaginatedQuery
-} = createOpraRtkHooks<api>();
+  useGetAllQuery,
+  usePostMutation,
+  useDeleteMutation
+} = patientService;
 ```
 
-**Usage:**
+**Register in your Store:**
+
+```typescript
+import { configureStore } from '@reduxjs/toolkit';
+import { patientService } from '../services/patientService';
+
+export const store = configureStore({
+  reducer: {
+    [patientService.reducerPath]: patientService.reducer,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(patientService.middleware),
+});
+```
+
+**Usage (Mutations update the cache directly, NO refetching!):**
 
 ```tsx
-import { useRtkApiQuery } from "../hooks/useOpraRtk";
+import { 
+  useGetAllQuery, 
+  usePostMutation, 
+  useDeleteMutation 
+} from '../services/patientService';
 
 export function PatientList() {
-  const [state, execute, totalMatches] = useRtkApiPaginatedQuery({
-    actionName: "patients/fetchList", // Unique name for Redux Thunk tracking
-    queryKey: ["patients", "list"],
-    pagination: { skip: 0, limit: 10 },
-    run: (api, pagingParams) => api.$patients.findMany({ ...pagingParams, projection: ["id"] })
-  });
+  const listParams = { skip: 0, limit: 10 };
+  const { data, isLoading } = useGetAllQuery(listParams);
 
-  return <div>Total: {totalMatches}</div>;
+  const [createPatient] = usePostMutation();
+  const [deletePatient] = useDeleteMutation();
+
+  const handleAdd = async () => {
+    // Note: passing listArgs explicitly tells the cache which query to update!
+    await createPatient({ 
+      body: { firstName: "New", lastName: "Patient" },
+      listArgs: listParams 
+    }).unwrap();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deletePatient({ 
+      id, 
+      listArgs: listParams 
+    }).unwrap();
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <ul>
+      {data?.payload?.map((patient: any) => (
+        <li key={patient.id}>
+          {patient.firstName} 
+          <button onClick={() => handleDelete(patient.id)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
 }
 ```
 
 ## Features
-- **UI Agnostic**: No `antd`, `react-i18next` or arbitrary UI components forcing architectural constraints.
+- **UI Agnostic**: No `ui library`, `react-i18next` or arbitrary UI components forcing architectural constraints.
 - **Hook Factory Pattern**: The `createOpraHooks<T>()` and `createOpraRtkHooks<T>()` guarantee robust type-inference for nested API endpoints without repeating types.
 - **Production Ready**: Built with `tsup` yielding optimal ESM and CJS modules.
