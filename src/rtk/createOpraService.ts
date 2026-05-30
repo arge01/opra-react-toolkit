@@ -122,7 +122,8 @@ export function createOpraService<TApi>(
                         (i: RtkDraftItem) => i.id === id
                       );
                       if (index !== -1) {
-                        targetList[index] = (item?.payload as RtkDraftItem) ?? item;
+                        targetList[index] =
+                          (item?.payload as RtkDraftItem) ?? item;
                       }
                     }
                   }
@@ -153,7 +154,9 @@ export function createOpraService<TApi>(
                   listArgs,
                   (draft: RtkDraftList) => {
                     if (Array.isArray(draft)) {
-                      return draft.filter((item: RtkDraftItem) => item.id !== id);
+                      return draft.filter(
+                        (item: RtkDraftItem) => item.id !== id
+                      );
                     } else if (draft.payload) {
                       draft.payload = draft.payload.filter(
                         (item: RtkDraftItem) => item.id !== id
